@@ -60,7 +60,7 @@ const getSubCategories = asyncHandler(async (req, res) => {
 
   const sqlQuery = `SELECT  SubCategory_Id , SubCategory_Name  FROM RadioSubCategory where FK_Category_Id  = ${categoryId}`;
   dbConfig.query(sqlQuery, (err, result) => {
-    if (err) return res.json({ Message: "Error in api" });
+    if (err) return res.json({ Message: "Error in api subcategory" });
     return res.json(result);
   });
 });
