@@ -3,7 +3,7 @@ const asyncHandler = require("express-async-handler");
 
 const getBanners = asyncHandler(async (req, res) => {
   const sqlQuery =
-    "SELECT  rb.Banner_Id,rb.Banner_Image,rb.Created_At,rc.Category_Name,rsc.SubCategory_Name  FROM RadioBanner rb LEFT JOIN RadioCategory as rc on rb.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rb.SubCategory_Id  = rsc.SubCategory_Id  Order by rb.Created_At DESC";
+    "SELECT  rb.Banner_Id,rb.Banner_Image,rb.Created_At,rc.Category_Name,rsc.SubCategory_Name,rb.Banner_Type  FROM RadioBanner rb LEFT JOIN RadioCategory as rc on rb.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rb.SubCategory_Id  = rsc.SubCategory_Id  Order by rb.Created_At DESC";
   dbConfig.query(sqlQuery, (err, result) => {
     if (err) return res.json({ Message: "Error in api" });
     return res.json(result);
@@ -12,14 +12,14 @@ const getBanners = asyncHandler(async (req, res) => {
 
 const addBanner = asyncHandler(async (req, res) => {
   // console.log("The Add banner Request", req.body);
-  const { image, categoryId, subCategoryId } = req.body;
-
-  if (!categoryId || !image || !subCategoryId) {
+  const { image, categoryId, subCategoryId, bannerType } = req.body;
+  console.log("trfwedqwasasd===" + bannerType);
+  if (!categoryId || !image || !subCategoryId || !bannerType) {
     res.status(400);
     throw new Error("All are mandatory fields");
   }
 
-  const sqlQuery = `INSERT INTO RadioBanner(Banner_Image,Category_Id,SubCategory_Id,Created_At)  VALUES ('${image}', '${categoryId}','${subCategoryId}', now())`;
+  const sqlQuery = `INSERT INTO RadioBanner(Banner_Image,Category_Id,SubCategory_Id,Created_At,Banner_Type)  VALUES ('${image}', '${categoryId}','${subCategoryId}', now(), '${bannerType}' )`;
 
   await dbConfig.query(sqlQuery, (err, result) => {
     if (err) return res.status(400).json({ Message: "Error in api" + err });
@@ -65,10 +65,24 @@ const getSubCategories = asyncHandler(async (req, res) => {
   });
 });
 
+const getBannersByCategory = asyncHandler(async (req, res) => {
+  const { categoryId, subCategoryId } = req.body;
+  if (!categoryId || !subCategoryId) {
+    res.status(400);
+    throw new Error("All are mandatory fields");
+  }
+  const sqlQuery = `SELECT  Banner_Image,Banner_Type FROM RadioBanner WHERE Category_Id = ${categoryId} AND SubCategory_Id =${subCategoryId} ORDER BY Banner_Type`;
+  dbConfig.query(sqlQuery, (err, result) => {
+    if (err) return res.json({ Message: "Error in api" });
+    return res.json(result);
+  });
+});
+
 module.exports = {
   getBanners,
   addBanner,
   deleteBanner,
   getCategories,
   getSubCategories,
+  getBannersByCategory,
 };
