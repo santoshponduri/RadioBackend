@@ -20,9 +20,9 @@ app.use(express.json());
 
 const port = process.env.PORT || 8081;
 
-app.use("/events", eventsRoutes);
-app.use("/schedules", scheduleRoutes);
-app.use("/banners", bannerRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/api/schedules", scheduleRoutes);
+app.use("/api/banners", bannerRoutes);
 app.use(errorHandler);
 
 app.listen(port, () => {
