@@ -1,25 +1,27 @@
-const mysql = require('mysql2');
+module.exports = () => {
+  let mysql = require('mysql2');
 
-const dbConfig = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'password',
-  database: 'RadioZindagi',
-});
+  // let connection = mysql.createConnection({
+  //   host: 'localhost',
+  //   user: 'root',
+  //   password: 'password',
+  //   database: 'RadioZindagi',
+  // });
 
-// const dbConfig = mysql.createConnection({
-//   host: 'rz.birbals.com',
-//   user: 'rzappadminradioz_root',
-//   password: 'RadioZindagi',
-//   database: 'rzappadminradioz_RadioZindagi',
-// });
+  let connection = mysql.createConnection({
+    host: '45.79.108.148',
+    user: 'rzappadminradioz_root',
+    password: 'RadioZindagi',
+    database: 'rzappadminradioz_RadioZindagi',
+  });
 
-dbConfig.connect((err) => {
-  if (err) {
-    console.log('Database Connection Failed !!!', err);
-  } else {
-    console.log('connected to Database');
-  }
-});
+  connection.connect(function (err) {
+    if (err) {
+      console.log(`connectionRequest Failed ${err.stack}`);
+    } else {
+      console.log(`DB connectionRequest Successful ${connection.threadId}`);
+    }
+  });
 
-module.exports = dbConfig;
+  return connection;
+};
