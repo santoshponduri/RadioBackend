@@ -1,9 +1,9 @@
 let dbConfig = require('../database/dbConfig');
 const asyncHandler = require('express-async-handler');
+const { sendPushNotifications } = require('../middleware/notifications');
 
 const getEvents = asyncHandler(async (req, res) => {
-  const sqlQuery =
-    'SELECT Event_Id,Event_Name,Event_Title,Event_Description,Event_Date,Event_Image,  rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioEvents re LEFT JOIN RadioCategory as rc on re.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on re.SubCategory_Id  = rsc.SubCategory_Id  Order by re.Created_At DESC';
+  const sqlQuery = 'SELECT * from RadioEvents';
   connection = dbConfig();
 
   connection.query(sqlQuery, (err, result) => {
@@ -12,6 +12,7 @@ const getEvents = asyncHandler(async (req, res) => {
       console.log(err);
       return res.json({ Message: 'Error in api ' + err });
     } else {
+      sendPushNotifications('New Event Addded', 'erfw', 'Event');
       connection.destroy();
       return res.json(result);
     }
@@ -44,6 +45,7 @@ const addEvent = asyncHandler(async (req, res) => {
       console.log(err);
       return res.status(400).json({ Message: 'Error in api' + err });
     } else {
+      sendPushNotifications('New Event Addded', title, 'Event');
       connection.destroy();
       return res.status(201).json({ message: 'Event created.' });
     }
