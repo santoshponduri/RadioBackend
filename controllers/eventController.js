@@ -1,22 +1,24 @@
-let dbConfig = require('../database/dbConfig');
 const asyncHandler = require('express-async-handler');
 const { sendPushNotifications } = require('../middleware/notifications');
+const pool = require('../database/dbConfig');
 
 const getEvents = asyncHandler(async (req, res) => {
-  const sqlQuery = 'SELECT * from RadioEvents';
-  connection = dbConfig();
+  const sqlQuery =
+    'SELECT Event_Id,Event_Name,Event_Title,Event_Description,Event_Date,Event_Image,  rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioEvents re LEFT JOIN RadioCategory as rc on re.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on re.SubCategory_Id  = rsc.SubCategory_Id  Order by re.Created_At DESC';
 
-  connection.query(sqlQuery, (err, result) => {
-    if (err) {
-      connection.destroy();
-      console.log(err);
-      return res.json({ Message: 'Error in api ' + err });
-    } else {
-      sendPushNotifications('New Event Addded', 'erfw', 'Event');
-      connection.destroy();
-      return res.json(result);
-    }
-  });
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const queryResult = await connection.query(sqlQuery);
+    await connection.commit();
+    return res.json(queryResult[0]);
+  } catch (error) {
+    console.error('getEvents, an error occurred:', error);
+    return res.status(400).json({ Message: 'Error in api' + error });
+  } finally {
+    connection.release();
+  }
 });
 
 const addEvent = asyncHandler(async (req, res) => {
@@ -37,19 +39,20 @@ const addEvent = asyncHandler(async (req, res) => {
   }
 
   const sqlQuery = `INSERT INTO RadioEvents(Event_Name,Event_Title,Event_Description,Event_Date,Created_At, Event_Image,Category_Id,SubCategory_Id)  VALUES ('${name}', '${title}','${description}','${date}', now(), '${image}', '${categoryId}', '${subCategoryId}' )`;
-  connection = dbConfig();
+  const connection = await pool.getConnection();
 
-  connection.query(sqlQuery, (err, result) => {
-    if (err) {
-      connection.destroy();
-      console.log(err);
-      return res.status(400).json({ Message: 'Error in api' + err });
-    } else {
-      sendPushNotifications('New Event Addded', title, 'Event');
-      connection.destroy();
-      return res.status(201).json({ message: 'Event created.' });
-    }
-  });
+  try {
+    await connection.beginTransaction();
+    const queryResult = await connection.query(sqlQuery);
+    await connection.commit();
+    sendPushNotifications('New Event Addded', title, 'Event');
+    return res.status(201).json({ message: 'Event created.' });
+  } catch (error) {
+    console.error('Add Events, an error occurred:', error);
+    return res.status(400).json({ Message: 'Error in api' + error });
+  } finally {
+    connection.release();
+  }
 });
 
 const deleteEvent = asyncHandler(async (req, res) => {
@@ -62,18 +65,19 @@ const deleteEvent = asyncHandler(async (req, res) => {
   }
 
   const sqlQuery = `DELETE  FROM RadioEvents WHERE Event_Id = ${deleteId}`;
-  connection = dbConfig();
+  const connection = await pool.getConnection();
 
-  connection.query(sqlQuery, (err, result) => {
-    if (err) {
-      connection.destroy();
-      console.log(err);
-      return res.status(400).json({ Message: 'Error in api' + err });
-    } else {
-      connection.destroy();
-      return res.status(201).json({ message: 'Event deleted.' });
-    }
-  });
+  try {
+    await connection.beginTransaction();
+    const queryResult = await connection.query(sqlQuery);
+    await connection.commit();
+    return res.status(201).json({ message: 'Event deleted.' });
+  } catch (error) {
+    console.error('Delete Events, an error occurred:', error);
+    return res.status(400).json({ Message: 'Error in api' + error });
+  } finally {
+    connection.release();
+  }
 });
 
 const editEvent = asyncHandler(async (req, res) => {
@@ -95,18 +99,19 @@ const editEvent = asyncHandler(async (req, res) => {
   }
 
   const sqlQuery = `UPDATE RadioEvents SET Event_Name = '${name}', Event_Title ='${title}', Event_Description = '${description}' , Event_Date = '${date}', Event_Image = '${image}' ,Category_Id = '${categoryId}', SubCategory_Id = '${subCategoryId}' WHERE Event_Id = '${id}'`;
-  connection = dbConfig();
+  const connection = await pool.getConnection();
 
-  connection.query(sqlQuery, (err, result) => {
-    if (err) {
-      connection.destroy();
-      console.log(err);
-      return res.status(400).json({ Message: 'Error in api' + err });
-    } else {
-      connection.destroy();
-      return res.status(201).json({ message: 'Event updated.' });
-    }
-  });
+  try {
+    await connection.beginTransaction();
+    const queryResult = await connection.query(sqlQuery);
+    await connection.commit();
+    return res.status(201).json({ message: 'Event updated.' });
+  } catch (error) {
+    console.error('Edit Events, an error occurred:', error);
+    return res.status(400).json({ Message: 'Error in api' + error });
+  } finally {
+    connection.release();
+  }
 });
 
 module.exports = { getEvents, addEvent, deleteEvent, editEvent };

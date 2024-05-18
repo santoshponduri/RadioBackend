@@ -1,27 +1,25 @@
-module.exports = () => {
-  let mysql = require('mysql2');
+const mysql = require('mysql2');
 
-  let connection = mysql.createConnection({
+const mySqlPool = mysql
+  .createPool({
     host: 'localhost',
     user: 'root',
     password: 'password',
     database: 'RadioZindagi',
+    connectionLimit: 10,
+    waitForConnections: true,
+  })
+  .promise();
+
+mySqlPool.on('connection', function (connection) {
+  console.log('DB Connection established');
+
+  mySqlPool.on('error', function (err) {
+    console.error(new Date(), 'MySQL error', err.code);
   });
-
-  // let connection = mysql.createConnection({
-  //   host: '45.79.108.148',
-  //   user: 'rzappadminradioz_root',
-  //   password: 'RadioZindagi',
-  //   database: 'rzappadminradioz_RadioZindagi',
-  // });
-
-  connection.connect(function (err) {
-    if (err) {
-      console.log(`connectionRequest Failed ${err.stack}`);
-    } else {
-      console.log(`DB connectionRequest Successful ${connection.threadId}`);
-    }
+  mySqlPool.on('close', function (err) {
+    console.error(new Date(), 'MySQL close', err);
   });
+});
 
-  return connection;
-};
+module.exports = mySqlPool;
