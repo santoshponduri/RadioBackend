@@ -37,13 +37,15 @@ const addEvent = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('All are mandatory fields ');
   }
-
-  const sqlQuery = `INSERT INTO RadioEvents(Event_Name,Event_Title,Event_Description,Event_Date,Created_At, Event_Image,Category_Id,SubCategory_Id)  VALUES ('${name}', '${title}','${description}','${date}', now(), '${image}', '${categoryId}', '${subCategoryId}' )`;
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
-    const queryResult = await connection.query(sqlQuery);
+    const queryResult = await connection.query(
+      `INSERT INTO RadioEvents(Event_Name,Event_Title,Event_Description,Event_Date,Created_At, Event_Image,Category_Id,SubCategory_Id)  VALUES (?,?,?,?,now(),?,?,? )`,
+      [name, title, description, date, image, categoryId, subCategoryId]
+    );
+
     await connection.commit();
     sendPushNotifications('New Event Addded', title, 'Event');
     return res.status(201).json({ message: 'Event created.' });
@@ -97,13 +99,14 @@ const editEvent = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('All are mandatory fields');
   }
-
-  const sqlQuery = `UPDATE RadioEvents SET Event_Name = '${name}', Event_Title ='${title}', Event_Description = '${description}' , Event_Date = '${date}', Event_Image = '${image}' ,Category_Id = '${categoryId}', SubCategory_Id = '${subCategoryId}' WHERE Event_Id = '${id}'`;
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
-    const queryResult = await connection.query(sqlQuery);
+    const queryResult = await connection.query(
+      `UPDATE RadioEvents SET Event_Name = ?, Event_Title = ? , Event_Description = ? , Event_Date = ?, Event_Image = ? ,Category_Id = ?, SubCategory_Id = ? WHERE Event_Id = ?`,
+      [name, title, description, date, image, categoryId, subCategoryId, id]
+    );
     await connection.commit();
     return res.status(201).json({ message: 'Event updated.' });
   } catch (error) {

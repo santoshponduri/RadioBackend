@@ -37,12 +37,15 @@ const addSchedule = asyncHandler(async (req, res) => {
     throw new Error('All are mandatory fields');
   }
 
-  const sqlQuery = `INSERT INTO RadioSchedule(Schedule_Name, Schedule_Description, Schedule_Date,Created_At,Schedule_Image,Category_Id,SubCategory_Id)  VALUES ('${name}', '${description}','${date}',now(), '${image}', '${categoryId}', '${subCategoryId}')`;
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
-    const queryResult = await connection.query(sqlQuery);
+    const queryResult = await connection.query(
+      `INSERT INTO RadioSchedule(Schedule_Name, Schedule_Description, Schedule_Date,Created_At,Schedule_Image,Category_Id,SubCategory_Id) VALUES (?,?,?,now(),?,?,?)`,
+      [name, description, date, image, categoryId, subCategoryId]
+    );
+
     await connection.commit();
     sendPushNotifications('New Schedule Added', name, 'Schedule');
     return res.status(201).json({ message: 'Event created.' });
@@ -64,12 +67,14 @@ const editSchedule = asyncHandler(async (req, res) => {
     throw new Error('All are mandatory fields');
   }
 
-  const sqlQuery = `UPDATE RadioSchedule SET Schedule_Name = '${name}', Schedule_Description = '${description}' , Schedule_Date = '${date}', Schedule_Image = '${image}',Category_Id = '${categoryId}', SubCategory_Id = '${subCategoryId}' WHERE Schedule_Id = '${id}'`;
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
-    const queryResult = await connection.query(sqlQuery);
+    const queryResult = await connection.query(
+      `UPDATE RadioSchedule SET Schedule_Name = ?, Schedule_Description = ? , Schedule_Date = ?, Schedule_Image = ? ,Category_Id = ? , SubCategory_Id = ? WHERE Schedule_Id = ?`,
+      [name, description, date, image, categoryId, subCategoryId, id]
+    );
     await connection.commit();
     return res.status(201).json({ message: 'Schedule updated.' });
   } catch (error) {
