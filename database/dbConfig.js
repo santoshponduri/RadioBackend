@@ -8,6 +8,7 @@ const mySqlPool = mysql
     database: 'RadioZindagi',
     connectionLimit: 10,
     waitForConnections: true,
+    dateStrings: true,
   })
   .promise();
 

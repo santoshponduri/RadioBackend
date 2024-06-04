@@ -29,7 +29,6 @@ const addEvent = asyncHandler(async (req, res) => {
     !name ||
     !title ||
     !description ||
-    !date ||
     !image ||
     !categoryId ||
     !subCategoryId
