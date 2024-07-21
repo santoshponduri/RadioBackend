@@ -20,6 +20,32 @@ const getSchedules = asyncHandler(async (req, res) => {
   }
 });
 
+const getSchedulesByCategory = asyncHandler(async (req, res) => {
+  const { subCategoryId, scheduleDate } = req.body;
+
+  if (!subCategoryId || !scheduleDate) {
+    res.status(400);
+    throw new Error('All are mandatory fields');
+  }
+
+  const myDateValue = `'${scheduleDate}'`;
+
+  const sqlQuery = `SELECT Schedule_Id , Schedule_Name , Schedule_Description ,Schedule_Date ,Schedule_Image, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id where rsc.SubCategory_Id = ${subCategoryId} AND  Schedule_Date >= ${myDateValue}  Order by rs.Created_At DESC`;
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const queryResult = await connection.query(sqlQuery);
+    await connection.commit();
+    return res.json(queryResult[0]);
+  } catch (error) {
+    console.error('getSchedulesByCategory, an error occurred:', error);
+    return res.status(400).json({ Message: 'Error in api' + error });
+  } finally {
+    connection.release();
+  }
+});
+
 const addSchedule = asyncHandler(async (req, res) => {
   console.log('The Add Schedule Request', req.body);
   const { name, description, date, image, categoryId, subCategoryId } =
@@ -110,4 +136,10 @@ const deleteSchedule = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { getSchedules, addSchedule, editSchedule, deleteSchedule };
+module.exports = {
+  getSchedules,
+  addSchedule,
+  editSchedule,
+  deleteSchedule,
+  getSchedulesByCategory,
+};
