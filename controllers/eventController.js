@@ -4,7 +4,7 @@ const pool = require('../database/dbConfig');
 
 const getEvents = asyncHandler(async (req, res) => {
   const sqlQuery =
-    'SELECT Event_Id,Event_Name,Event_Title,Event_Description,Event_Date,Event_Image,  rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioEvents re LEFT JOIN RadioCategory as rc on re.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on re.SubCategory_Id  = rsc.SubCategory_Id  Order by re.Created_At DESC';
+    'SELECT Event_Id,Event_Name,Event_Title,Event_Buy_Url,Event_Description,Event_Date,Event_Image, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioEvents re LEFT JOIN RadioCategory as rc on re.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on re.SubCategory_Id  = rsc.SubCategory_Id  Order by re.Created_At DESC';
 
   const connection = await pool.getConnection();
 
@@ -22,13 +22,22 @@ const getEvents = asyncHandler(async (req, res) => {
 });
 
 const addEvent = asyncHandler(async (req, res) => {
-  const { name, title, description, date, image, categoryId, subCategoryId } =
-    req.body;
+  const {
+    name,
+    title,
+    description,
+    buyUrl,
+    date,
+    image,
+    categoryId,
+    subCategoryId,
+  } = req.body;
 
   if (
     !name ||
     !title ||
     !description ||
+    !buyUrl ||
     !image ||
     !categoryId ||
     !subCategoryId
@@ -41,8 +50,8 @@ const addEvent = asyncHandler(async (req, res) => {
   try {
     await connection.beginTransaction();
     const queryResult = await connection.query(
-      `INSERT INTO RadioEvents(Event_Name,Event_Title,Event_Description,Event_Date,Created_At, Event_Image,Category_Id,SubCategory_Id)  VALUES (?,?,?,?,now(),?,?,? )`,
-      [name, title, description, date, image, categoryId, subCategoryId]
+      `INSERT INTO RadioEvents(Event_Name,Event_Title,Event_Buy_Url, Event_Description,Event_Date,Created_At, Event_Image,Category_Id,SubCategory_Id)  VALUES (?,?,?,?,?,now(),?,?,? )`,
+      [name, title, buyUrl, description, date, image, categoryId, subCategoryId]
     );
 
     await connection.commit();
@@ -87,6 +96,7 @@ const editEvent = asyncHandler(async (req, res) => {
     id,
     name,
     title,
+    buyUrl,
     description,
     date,
     image,
@@ -103,8 +113,18 @@ const editEvent = asyncHandler(async (req, res) => {
   try {
     await connection.beginTransaction();
     const queryResult = await connection.query(
-      `UPDATE RadioEvents SET Event_Name = ?, Event_Title = ? , Event_Description = ? , Event_Date = ?, Event_Image = ? ,Category_Id = ?, SubCategory_Id = ? WHERE Event_Id = ?`,
-      [name, title, description, date, image, categoryId, subCategoryId, id]
+      `UPDATE RadioEvents SET Event_Name = ?, Event_Title = ? , Event_Buy_Url = ? , Event_Description = ? , Event_Date = ?, Event_Image = ? ,Category_Id = ?, SubCategory_Id = ? WHERE Event_Id = ?`,
+      [
+        name,
+        title,
+        buyUrl,
+        description,
+        date,
+        image,
+        categoryId,
+        subCategoryId,
+        id,
+      ]
     );
     await connection.commit();
     return res.status(201).json({ message: 'Event updated.' });
