@@ -4,7 +4,7 @@ const { sendPushNotifications } = require('../middleware/notifications');
 
 const getSchedules = asyncHandler(async (req, res) => {
   const sqlQuery =
-    'SELECT Schedule_Id , Schedule_Name , Schedule_Description ,Schedule_Date ,Schedule_Image, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id Order by rs.Created_At DESC';
+    'SELECT Schedule_Id , Schedule_Name , Schedule_Description ,Schedule_Date ,Schedule_Image,Schedule_Day, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id Order by rs.Created_At DESC';
   const connection = await pool.getConnection();
 
   try {
@@ -21,16 +21,16 @@ const getSchedules = asyncHandler(async (req, res) => {
 });
 
 const getSchedulesByCategory = asyncHandler(async (req, res) => {
-  const { subCategoryId, scheduleDate } = req.body;
+  const { subCategoryId, scheduleDay } = req.body;
 
-  if (!subCategoryId || !scheduleDate) {
+  if (!subCategoryId || !scheduleDay) {
     res.status(400);
     throw new Error('All are mandatory fields');
   }
 
-  const myDateValue = `'${scheduleDate}'`;
+  const myDayValue = `'${scheduleDay}'`;
 
-  const sqlQuery = `SELECT Schedule_Id , Schedule_Name , Schedule_Description ,Schedule_Date ,Schedule_Image, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id where rsc.SubCategory_Id = ${subCategoryId} AND  Schedule_Date >= ${myDateValue}  Order by rs.Created_At DESC`;
+  const sqlQuery = `SELECT Schedule_Id , Schedule_Name ,Schedule_Description ,Schedule_Date ,Schedule_Image,Schedule_Day, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id where rsc.SubCategory_Id = ${subCategoryId} AND  Schedule_Day = ${myDayValue}  Order by rs.Created_At DESC`;
   const connection = await pool.getConnection();
 
   try {
@@ -48,17 +48,10 @@ const getSchedulesByCategory = asyncHandler(async (req, res) => {
 
 const addSchedule = asyncHandler(async (req, res) => {
   console.log('The Add Schedule Request', req.body);
-  const { name, description, date, image, categoryId, subCategoryId } =
+  const { name, description, date, image, categoryId, subCategoryId, day } =
     req.body;
 
-  if (
-    !name ||
-    !description ||
-    !date ||
-    !image ||
-    !categoryId ||
-    !subCategoryId
-  ) {
+  if (!name || !description || !date || !categoryId || !subCategoryId || !day) {
     res.status(400);
     throw new Error('All are mandatory fields');
   }
@@ -68,8 +61,8 @@ const addSchedule = asyncHandler(async (req, res) => {
   try {
     await connection.beginTransaction();
     const queryResult = await connection.query(
-      `INSERT INTO RadioSchedule(Schedule_Name, Schedule_Description, Schedule_Date,Created_At,Schedule_Image,Category_Id,SubCategory_Id) VALUES (?,?,?,now(),?,?,?)`,
-      [name, description, date, image, categoryId, subCategoryId]
+      `INSERT INTO RadioSchedule(Schedule_Name, Schedule_Description, Schedule_Date, Schedule_Day,Created_At,Schedule_Image,Category_Id,SubCategory_Id) VALUES (?,?,?,?,now(),?,?,?)`,
+      [name, description, date, day, image, categoryId, subCategoryId]
     );
 
     await connection.commit();
@@ -85,10 +78,10 @@ const addSchedule = asyncHandler(async (req, res) => {
 
 const editSchedule = asyncHandler(async (req, res) => {
   console.log('The Update schedule Request', req.body);
-  const { id, name, description, date, image, categoryId, subCategoryId } =
+  const { id, name, description, date, image, categoryId, subCategoryId, day } =
     req.body;
 
-  if (!id || !name || !description || !date || !image) {
+  if (!id || !name || !description || !date || !day) {
     res.status(400);
     throw new Error('All are mandatory fields');
   }
@@ -98,8 +91,8 @@ const editSchedule = asyncHandler(async (req, res) => {
   try {
     await connection.beginTransaction();
     const queryResult = await connection.query(
-      `UPDATE RadioSchedule SET Schedule_Name = ?, Schedule_Description = ? , Schedule_Date = ?, Schedule_Image = ? ,Category_Id = ? , SubCategory_Id = ? WHERE Schedule_Id = ?`,
-      [name, description, date, image, categoryId, subCategoryId, id]
+      `UPDATE RadioSchedule SET Schedule_Name = ?, Schedule_Description = ? , Schedule_Date = ?, Schedule_Day =?, Schedule_Image = ? ,Category_Id = ? , SubCategory_Id = ? WHERE Schedule_Id = ?`,
+      [name, description, date, day, image, categoryId, subCategoryId, id]
     );
     await connection.commit();
     return res.status(201).json({ message: 'Schedule updated.' });
