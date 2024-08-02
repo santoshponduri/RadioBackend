@@ -30,7 +30,7 @@ const getSchedulesByCategory = asyncHandler(async (req, res) => {
 
   const myDayValue = `'${scheduleDay}'`;
 
-  const sqlQuery = `SELECT Schedule_Id , Schedule_Name ,Schedule_Description ,Schedule_Date ,Schedule_Image,Schedule_Day, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id where rsc.SubCategory_Id = ${subCategoryId} AND  Schedule_Day = ${myDayValue}  Order by rs.Created_At DESC`;
+  const sqlQuery = `SELECT Schedule_Id , Schedule_Name ,Schedule_Description ,Schedule_Date ,Schedule_Image,Schedule_Day, rc.Category_Id ,rc.Category_Name,rsc.SubCategory_Id ,rsc.SubCategory_Name  FROM RadioSchedule rs LEFT JOIN RadioCategory as rc on rs.Category_Id  = rc.Category_Id LEFT JOIN RadioSubCategory as rsc  on rs.SubCategory_Id  = rsc.SubCategory_Id where rsc.SubCategory_Id = ${subCategoryId} AND  Schedule_Day = ${myDayValue}  Order by rs.Schedule_Date ASC`;
   const connection = await pool.getConnection();
 
   try {
